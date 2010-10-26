@@ -1,0 +1,23 @@
+
+- Petter Nordahl-Hagen.  Windows NT registry file format description.
+  (The file 'winntreg.txt' included in this distribution is derived from this.)
+  http://home.eunet.no/~pnordahl/ntpasswd/WinReg.txt
+
+- Some useful information on how Windows reads from and writes to registry
+  hives:
+  http://www.microsoft.com/technet/archive/winntas/tips/winntmag/inreg.mspx
+
+- Registry key, value, and depth limits:
+  http://msdn2.microsoft.com/en-us/library/ms724872.aspx
+
+- Misc references for windows registry permissions and ownership:
+  http://msdn2.microsoft.com/en-gb/library/ms724878.aspx
+  http://technet2.microsoft.com/WindowsServer/en/library/86cf2457-4f17-43f8-a2ab-7f4e2e5659091033.mspx?mfr=true
+  http://msdn2.microsoft.com/en-gb/library/aa374892.aspx
+
+- ACL/ACE flags information
+  http://support.microsoft.com/kb/220167
+  http://msdn2.microsoft.com/en-us/library/aa772242.aspx
+
+- Info on SAM hive, syskey, and hash extraction (with tools bkhive and samdump2):
+  http://www.studenti.unina.it/~ncuomo/syskey/

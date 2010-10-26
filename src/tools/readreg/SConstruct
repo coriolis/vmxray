@@ -1,0 +1,15 @@
+env = Environment()
+if env['PLATFORM'] == "win32" :
+    from win32_settings import *
+elif env['PLATFORM'] == "posix" :
+    from linux_settings import *
+
+print env['PLATFORM']
+SharedLibrary('reglookuplib', ['src/reglookupLib.c',
+                    'lib/regfi.c',
+                    'lib/smb_deps.c',
+                    'lib/void_stack.c' ],
+                     CPPPATH=INCLUDEPATH + ['include'],
+                     LIBPATH=LIBPATH,
+                     LIBS=LIBS,
+          )

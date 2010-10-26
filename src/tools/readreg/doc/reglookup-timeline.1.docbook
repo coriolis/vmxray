@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id='reglookup-timeline.1'>
+  <!--  $Id$ -->
+  <refmeta>
+    <refentrytitle>reglookup-timeline</refentrytitle>
+    <manvolnum>1</manvolnum>
+    <refmiscinfo class="sectdesc">File Conversion Utilities</refmiscinfo>
+  </refmeta>
+  <refnamediv id='name'>
+    <refname>reglookup-timeline</refname>
+    <refpurpose>windows NT+ registry MTIME timeline generator</refpurpose>
+  </refnamediv>
+
+  <refsect1 id='synopsis'>
+    <title>SYNOPSIS</title>
+    <para>
+      <command>
+	reglookup-timeline [<replaceable>-H</replaceable>] 
+                            <replaceable>registry-file</replaceable>
+                           [<replaceable>registry-file</replaceable> ...]
+      </command>
+    </para>
+  </refsect1>
+
+  <refsect1 id='description'>
+    <title>DESCRIPTION</title>
+    <para>
+      This script is a wrapper for <command>reglookup(1)</command>, and reads
+      one or more registry
+      files to produce an MTIME sorted output.  This is helpful when building
+      timelines for forensic investigations.
+    </para>
+  </refsect1>
+
+  <refsect1 id='parameters'>
+    <title>PARAMETERS</title>
+    <para>
+      <command>reglookup-timeline</command> accepts one or more registry file
+      names.  All of the provided registries will be parsed using 
+      <command>reglookup(1)</command>.  The <command>-H</command> option may be
+      used to omit the header line.
+    </para>
+  </refsect1>
+
+  <refsect1 id='output'>
+    <title>OUTPUT</title>
+    <para>
+      <command>reglookup-timeline</command> generates a comma-separated 
+      values (CSV) compatible format to stdout.  While the output of 
+      <command>reglookup-timeline</command> and <command>reglookup(1)</command>
+      differ in the columns returned, the base format is the same.  
+    </para>
+    <para>
+      Currently, <command>reglookup-timeline</command> returns three columns:
+      MTIME, FILE, and PATH.  Only rows representing registry keys are returned,
+      since MTIMEs are not stored for values.  The FILE column indicates which
+      registry file (provided as an argument) the key came from.  Finally, the
+      PATH field contains the full registry path to the key.  Records are 
+      returned sorted in ascending order based on the MTIME column.
+    </para>
+  </refsect1>
+
+  <refsect1 id='bugs'>
+    <title>BUGS</title>
+    <para>
+      This script is new, and as such it's interface may change significantly 
+      over the next few revisions.  In particular, additional command line 
+      options will likely be added, and the output of the script may be altered
+      in minor ways.
+    </para>
+    <para>
+      It is very difficult to find documentation on what precise operations 
+      cause the MTIMEs to be updated.  Basic experimentation indicates that 
+      a key's stamp is updated anytime an immediate sub-value or sub-key is 
+      created, renamed, deleted, or it's value is modified.  If this MTIME 
+      data is critical to an investigation, any conclusions should be 
+      validated through experimentation in a controlled lab environment.
+    </para>
+    <para>
+      This software should be considered unstable at this time.
+    </para>
+  </refsect1>
+
+  <refsect1 id='credits'>
+    <title>CREDITS</title>
+    <para>
+      This script was written by Timothy D. Morgan based on suggestions
+      from Uwe Danz.
+    </para>
+    <para>
+      Please see source code for a full list of copyrights.
+    </para>
+  </refsect1>
+
+  <refsect1 id='license'>
+    <title>LICENSE</title>
+    <para>
+      Please see the file "LICENSE" included with this software
+      distribution.
+    </para>
+    <para>      
+      This program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU General Public License version 2 for more details.
+    </para>
+  </refsect1>
+
+  <refsect1 id='seealso'>
+    <title>SEE ALSO</title>
+    <para>
+      reglookup(1)
+    </para>
+  </refsect1>
+</refentry>
