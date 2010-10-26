@@ -1,0 +1,49 @@
+#!/bin/sh
+
+# This script is a wrapper for reglookup, and reads one or more registry
+# files to produce an MTIME sorted output.  This is helpful when building
+# timelines for investigations.
+#
+# Copyright (C) 2005-2007 Timothy D. Morgan
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; version 2 of the License.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  
+#
+# $Id$
+
+
+usage()
+{
+  echo "Usage: $0 [-H] <REGISTRY_FILE> [<REGISTRY_FILE> ...]" 1>&2
+  echo "   -H  Omit header line" 1>&2
+}
+
+if [ $# -eq 0 ]; then
+  usage
+  echo "ERROR: requires at least one parameter" 1>&2
+  exit 1
+fi
+
+PRINT_HEADER=true
+if [ "$1" = "-H" ]; then
+  PRINT_HEADER=false
+  shift
+fi
+
+if [ "$PRINT_HEADER" = "true" ]; then
+  echo "MTIME,FILE,PATH"
+fi
+
+for F in $@; do
+  reglookup -t KEY -H "$F" | awk -F',' '{ printf "%s,'"$F"',%s\n",$4,$1; }'
+done | sort

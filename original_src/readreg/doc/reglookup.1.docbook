@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<refentry id='reglookup.1'>
+  <!--  $Id$ -->
+  <refmeta>
+    <refentrytitle>reglookup</refentrytitle>
+    <manvolnum>1</manvolnum>
+    <refmiscinfo class="sectdesc">File Conversion Utilities</refmiscinfo>
+  </refmeta>
+  <refnamediv id='name'>
+    <refname>reglookup</refname>
+    <refpurpose>windows NT+ registry reader/lookup tool</refpurpose>
+  </refnamediv>
+
+  <refsect1 id='synopsis'>
+    <title>SYNOPSIS</title>
+    <para>
+      <command>
+	reglookup [options] <replaceable>registry-file</replaceable>
+      </command> 
+    </para>
+  </refsect1>
+
+  <refsect1 id='description'>
+    <title>DESCRIPTION</title>
+    <para>
+        reglookup is designed to read windows registry elements and
+        print them out to stdout in a CSV-like format.  It has filtering
+        options to narrow the focus of the output.  This tool is
+        designed to work with on windows NT/2K/XP/2K3 registries, though
+        your mileage may vary.
+    </para>
+  </refsect1>
+
+  <refsect1 id='options'>
+    <title>OPTIONS</title>
+    <para>
+      <command>reglookup</command> accepts the following parameters:
+    </para>
+
+    <variablelist remap='IP'>
+      <varlistentry>
+        <term>
+          <option>-p <replaceable>prefix-filter</replaceable></option>
+        </term>
+        <listitem>
+          <para>
+	    Specify a path prefix filter.  Only keys/values under
+	    this registry path will be output.
+          </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+    <variablelist remap='IP'>
+      <varlistentry>
+        <term>
+          <option>-t <replaceable>type-filter</replaceable></option>
+        </term>
+        <listitem>
+          <para>
+	    Specify a type filter.  Only elements which match this
+	    registry data type will be printed.  Acceptable values
+	    are: 
+            <command>
+	      NONE, SZ, EXPAND_SZ, BINARY, DWORD, DWORD_BE,
+	      LINK, MULTI_SZ, RSRC_LIST, RSRC_DESC, RSRC_REQ_LIST, QWORD
+	    </command>
+	    and
+	    <command>
+	      KEY
+	    </command>
+	  </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+    <variablelist remap='IP'>
+      <varlistentry>
+        <term>
+          <option>-h</option>
+        </term>
+        <listitem>
+	  <para>
+	    Enables the printing of a column header row. (default)
+	  </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+    <variablelist remap='IP'>
+      <varlistentry>
+        <term>
+          <option>-H</option>
+        </term>
+        <listitem>
+	  <para>
+	    Disables the printing of a column header row.
+	  </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+    <variablelist remap='IP'>
+      <varlistentry>
+        <term>
+          <option>-s</option>
+        </term>
+        <listitem>
+	  <para>
+	    Adds four additional columns to output containing 
+	    information from key security descriptors.  The columns 
+	    are: owner, group, sacl, dacl.
+	    (This feature's output probably contains bugs right now.)
+	  </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+    <variablelist remap='IP'>
+      <varlistentry>
+        <term>
+          <option>-S</option>
+        </term>
+        <listitem>
+	  <para>
+	    Disables the printing of security descriptor
+	    information. (default)
+	  </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+    <variablelist remap='IP'>
+      <varlistentry>
+        <term>
+          <option>-v</option>
+        </term>
+        <listitem>
+	  <para>
+	    Verbose output. (Currently does little to nothing.)
+	  </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+
+    <variablelist remap='IP'>
+      <varlistentry>
+        <term>
+          <option><replaceable>registry-file</replaceable></option>
+        </term>
+        <listitem>
+	  <para>
+	    Required argument.  Specifies the location of the
+	    registry file to read.  Typically, these files will be
+	    found on a NTFS partition under
+	    <command>%SystemRoot%/system32/config</command>.
+	  </para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+  </refsect1>
+
+  <refsect1 id='output'>
+    <title>OUTPUT</title>
+    <para>
+      <!-- XXX: this should be a bit more formal -->
+      <command>reglookup</command> generates comma-separated values (CSV) 
+      and writes them to stdout.  The format is designed to simplify parsing 
+      algorithms of other tools by quoting CSV special characters using a 
+      common hexadecimal format.  Specifically, special characters or non-ascii 
+      bytes are converted to "\xQQ" where QQ is the hexadecimal value for 
+      the byte.
+    </para>
+    <para>
+      The number of columns or fields in each line is fixed for a given run 
+      of the program, but may vary based on the command line options provided.
+      See the header line for information on which fields are available and 
+      what they contain.
+    </para>
+    <para>
+      Some fields in some lines may contain sub-fields which require additional
+      delimiters.  If these sub-delimiters occur in these sub-fields, they are 
+      also encoded in the same way as commas or other special characters are.  
+      Currently, the second, third, and fourth level delimiters are "|", ":", 
+      and " ", respectively.  These are particularly important to take note of 
+      when security attributes are printed.  Please note that these delimiters
+      may occur in fields that are not sub-delimited, and should not be 
+      interpreted as special.
+    </para>
+    <para>
+      Security attributes of registry keys have a complex structure which is 
+      outlined here.  Each key will generally have an associated ACL (Access 
+      Control List), which is made up of ACEs (Access Control Entries).  Each 
+      ACE is delimited by the secondary delimiter mentioned above, "|".  The 
+      fields within an ACE are delimited by the third-level delimiter, ":", 
+      and consist of a SID, the ACE type (ALLOW, DENY, etc), a list of access 
+      rights, and a list of flags.  The last two fields are delimited by the 
+      fourth-level delimiter " ".  These final lists are simply human-readable 
+      interpretations of bits.  The access rights abbreviations are listed 
+      below along with their Microsoft-assigned names:
+      <screen>
+      QRY_VAL		KEY_QUERY_VALUE
+      SET_VAL		KEY_SET_VALUE
+      CREATE_KEY	KEY_CREATE_SUB_KEY
+      ENUM_KEYS		KEY_ENUMERATE_SUB_KEYS
+      NOTIFY		KEY_NOTIFY
+      CREATE_LNK	KEY_CREATE_LINK
+      WOW64_64		KEY_WOW64_64KEY
+      WOW64_32		KEY_WOW64_32KEY
+      DELETE		DELETE
+      R_CONT		READ_CONTROL
+      W_DAC		WRITE_DAC
+      W_OWNER		WRITE_OWNER
+      SYNC		SYNCHRONIZE
+      SYS_SEC		ACCESS_SYSTEM_SECURITY
+      MAX_ALLWD		MAXIMUM_ALLOWED
+      GEN_A		GENERIC_ALL
+      GEN_X		GENERIC_EXECUTE
+      GEN_W		GENERIC_WRITE
+      GEN_R		GENERIC_READ
+      </screen>
+
+      And the meaning of each flag is:
+      <screen>
+      OI	Object Inherit
+      CI	Container Inherit
+      NP	Non-Propagate
+      IO	Inherit Only
+      IA	Inherited ACE
+      </screen>
+
+      Please see the following references for more information:
+      <screen>
+        http://msdn2.microsoft.com/en-gb/library/ms724878.aspx
+        http://msdn2.microsoft.com/en-gb/library/aa374892.aspx
+        http://msdn2.microsoft.com/en-us/library/aa772242.aspx
+        http://support.microsoft.com/kb/220167
+      </screen>
+    </para>
+    <para>
+      Note that some of the bits listed above have either not been allocated by 
+      Microsoft, or simply aren't documented.  If any bits are set in the above 
+      two fields that aren't recognized, a hexidecimal representation of all of 
+      these mystery bits will be included in the output.  For instance, if the 
+      lowest bit and third lowest bit were not recognized while being set, 
+      the number "0x5" would be included as an element in the list.
+    </para>
+    <para>
+      While the ACL/ACE output format is mostly stable at this point, minor 
+      changes may be introduced in future versions.
+    </para>
+  </refsect1>
+
+  <refsect1 id='examples'>
+    <title>EXAMPLES</title>
+    <para>
+      To read and print the contents of an entire system registry
+      file: 
+    </para>
+    <para>
+      <screen>
+	reglookup /mnt/win/c/WINNT/system32/config/system
+      </screen>
+    </para>
+    <para>
+      To limit the output to just those entries under the Services
+      key: 
+    </para>
+    <para>
+      <screen>
+	reglookup -p /ControlSet002/Services /mnt/win/c/WINNT/system32/config/system
+      </screen>
+    </para>
+    <para>
+      To limit the output to all registry values of type BINARY:
+    </para>
+    <para>
+      <screen>
+	reglookup -t BINARY /mnt/win/c/WINNT/system32/config/system
+      </screen>
+    </para>
+    <para>
+      And to limit the output to BINARY values under the Services key:
+    </para>
+    <para>
+      <screen>
+	reglookup -t BINARY -p /ControlSet002/Services /mnt/win/c/WINNT/system32/config/system
+      </screen>
+    </para>
+  </refsect1>
+
+  <refsect1 id='bugs'>
+    <title>BUGS</title>
+    <para>
+      This program has only been tested on a few different systems.
+      (Please report results to the development list if you test it 
+      on Windows NT 4.0, 2003, or Vista registries.  Also, if you 
+      test on any 64-bit architecture, please contact us.)
+    </para>
+    <para>
+      Verbose output is not working.
+    </para>
+    <para>
+      The SID conversions haven't been carefully checked for accuracy.
+    </para>
+    <para>
+      The MTIME conversions appear correctly produce the stored UTC timestamp.
+      However, due to the periodicity of registry writes, and the complexity
+      of the conversion, a small amount of error (on the order of seconds) may
+      be possible.  The documentation available online from Microsoft on 
+      this field is very poor.
+    </para>
+    <para>
+      Backslashes are currently considered special characters, to make 
+      parsing easier for automated tools.  However, this causes paths 
+      to be difficult to read.
+    </para>
+    <para>
+      You'll notice that registry paths aren't all the same as the
+      equivalents you see in the windows registry editor.  This is because
+      Windows constructs the registry view from multiple registry files, 
+      each with their own roots.  This utility merely shows what exists 
+      under a single root.  This isn't really a bug, but one should be 
+      aware of the differences in path.
+    </para>
+  </refsect1>
+
+  <refsect1 id='credits'>
+    <title>CREDITS</title>
+    <para>
+      This program was initially based on editreg.c by 
+      Richard Sharpe.  It has since been rewritten to use a modified
+      version the regfio library written by Gerald Carter.  Heavy
+      modifications to the library and the original command line
+      interface have been done by Timothy D. Morgan.
+    </para>
+    <para>
+      Please see source code for a full list of copyrights.
+    </para>
+  </refsect1>
+
+  <refsect1 id='license'>
+    <title>LICENSE</title>
+    <para>
+      Please see the file "LICENSE" included with this software
+      distribution.
+    </para>
+    <para>      
+      This program is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU General Public License version 2 for more details.
+    </para>
+  </refsect1>
+
+  <refsect1 id='seealso'>
+    <title>SEE ALSO</title>
+    <para>
+      reglookup-timeline(1)
+    </para>
+  </refsect1>
+</refentry>
