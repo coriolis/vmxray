@@ -1,12 +1,12 @@
-VM-xray
+VMxray
 ---------
-VM-xray looks into VM image of a machine and provides details of installed
+VMxray looks into VM image of a machine and provides details of installed
 OS and application in it, without running the VM.
 
 It uses Sleuthkit(http://www.sleuthkit.org), QEMU (http://wiki.qemu.org) and 
 reglookup (http://projects.sentinelchicken.org/reglookup/).
 
-VM-xray runs on Linux as well as Windows.
+VMxray runs on Linux as well as Windows.
 
 * Requirements
 - Python 2.5 or above
