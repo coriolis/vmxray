@@ -4,6 +4,7 @@ QEMU_DIR := src/tools/qemu
 TSK_DIR := src/tools/sleuthkit
 READ_REG_DIR := src/tools/readreg
 TSK_TOOL_DIR := tools/fstools
+VS_TOOL_DIR := tools/vstools
 SRC_LIB_DIR := src/lib
 SRC_BIN_DIR := src/bin
 SRC_CONF_DIR := src/conf
@@ -23,13 +24,16 @@ all:	$(TARGET)
 install:	all
 	cp ${TMP_BUILD_DIR}/lib/qemu-img-lib.so.0 ${BUILD_DIR}/bin
 	cp ${READ_REG_DIR}/libreglookuplib.so ${BUILD_DIR}/bin/reglookup
+	cp ${READ_REG_DIR}/libreglookuplib.so ${BUILD_DIR}/bin/reglookuplib
 	cp ${TSK_DIR}/${TSK_TOOL_DIR}/icat ${BUILD_DIR}/bin
 	cp ${TSK_DIR}/${TSK_TOOL_DIR}/fls ${BUILD_DIR}/bin
+	cp ${TSK_DIR}/${VS_TOOL_DIR}/mmls ${BUILD_DIR}/bin
 	find ${BUILD_DIR}/bin -name '*.o'  -delete
 	find ${BUILD_DIR}/bin -name '*.cpp' -delete
 	rm -rf ${BUILD_DIR}/bin/Makefile*
 	cp -r ${SRC_LIB_DIR}/* ${BUILD_DIR}/lib
 	cp ${SRC_BIN_DIR}/*.py ${BUILD_DIR}/bin/
+	cp ${SRC_BIN_DIR}/inspect_vm ${BUILD_DIR}/bin/
 	mkdir -p ${BUILD_DIR}/tmp	
 	cp ${SRC_CONF_DIR}/*.conf ${BUILD_DIR}/bin/
 

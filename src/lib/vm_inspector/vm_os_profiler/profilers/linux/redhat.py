@@ -40,6 +40,8 @@ class vm_os_redhat(vm_os_linux):
         """
         Extract the redhat machine details.
         """
+
+        raise Exception("Unsupported OS.")
         fd = open(os.path.join(self.fs_mntpt, 'etc', 'redhat-release'))
         # remove the newline char
         self.os_details['distro'] = fd.readline()[:-1]

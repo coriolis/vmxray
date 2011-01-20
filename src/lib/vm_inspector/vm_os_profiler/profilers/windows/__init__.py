@@ -181,7 +181,8 @@ class vm_os_windows(vm_os_profiler_base):
            print "Error loading library: " + str(e)
 
         try:
-            self.reg_handle = self.fn_reg_open(self.reg_path)
+            reg_path = c_char_p(self.reg_path)
+            self.reg_handle = self.fn_reg_open(reg_path)
         except Exception, e:
            print "Error opening registry hive: " + str(e)
 
@@ -200,6 +201,17 @@ class vm_os_windows(vm_os_profiler_base):
         #self.__get_prodspec()
         self.os_details['installed_app'] = ', '.join(self.installed_app)
 
+    def __update_os_details(self):
+        """ This method updates the os_details dict to contain required keys.
+        """
+        self.os_details['os_name'] = self.os_details.get('ProductName',
+                                                         'Windows')
+        self.os_details['distro'] = 'Windows'
+        self.os_details['str_os_kernel_bld'] = self.os_details.get('BuildLab',
+                                                                   "")
+        self.os_details['installed_apps_list'] = \
+                self.os_details['installed_app'].split(',')
+
     def get_os_details(self):
         """
         This method fetch the details and return dictionary os_details.
@@ -210,6 +222,7 @@ class vm_os_windows(vm_os_profiler_base):
         self.__init_reglookup()
         # Step 2: Do registry lookup
         self.__lookup_registry()
+        self.__update_os_details()
         return self.os_details
 
     @staticmethod

@@ -31,30 +31,27 @@ class vm_fs_unsupported_linux_distro(Exception):
             self.fault = "Unsupported Linux distribution."
         Exception.__init__(self, self.fault)
 
+def os_type_redhat(args):
+    import redhat
+    return object.__new__(redhat.vm_os_redhat, **args)
+
+def os_type_debian(args):
+    import debian
+    return object.__new__(debian.vm_os_debian, **args)
+
+_OS_TYPE_MAP = {
+    OS_TYPE_LINUX_REDHAT : os_type_redhat,
+    OS_TYPE_LINUX_DEBIAN : os_type_debian,
+}
+
 class vm_os_linux(vm_os_profiler_base):
     def __new__(cls, **args):
         if not os.path.exists(args['fs_mountpoint']):
             raise vm_fs_mountpoint_not_exists()
-
-        #if not os.path.ismount(args['fs_mountpoint']):
-            #raise vm_fs_not_mounted_error()
         
-        fs_mntpt = args['fs_mountpoint']
-        #if os.path.exists(os.path.join(fs_mntpt, \
-                                       #os_path_map[OS_TYPE_LINUX_REDHAT])):
-            #import redhat
-            #return object.__new__(redhat.vm_os_redhat, **args)
-        #elif os.path.exists(os.path.join(fs_mntpt, \
-                                         #os_path_map[OS_TYPE_LINUX_DEBIAN])):
-            #import debian
-            #return object.__new__(debian.vm_os_debian, **args)
-        if args["os_type"] == OS_TYPE_LINUX_REDHAT:
-            import redhat
-            return object.__new__(redhat.vm_os_redhat, **args)
-        elif args["os_type"] == OS_TYPE_LINUX_DEBIAN:
-            import debian
-            return object.__new__(debian.vm_os_debian, **args)
-        else:
+        try:
+            return _OS_TYPE_MAP[args['os_type']](args)
+        except:
             raise vm_fs_unsupported_linux_distro()
 
     def __init__(self, **args):

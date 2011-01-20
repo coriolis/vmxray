@@ -143,6 +143,9 @@ class vmware_config_parser(vm_config_parser_base):
                 disk_path = os.path.dirname(self.cfg_file) + '/' + disk
                 if os.path.exists(disk_path):
                     self.cfg_details['primary_disk'].append(disk)
+
+        self.cfg_details['primary_disk_str'] = \
+                ', '.join(self.cfg_details['primary_disk'])
         return
     
     def vm_read_config(self):
@@ -161,8 +164,10 @@ class vmware_config_parser(vm_config_parser_base):
         vmtypekey = "%s__%s" % (str(self.vmx_info['config']['version']), 
                 str(self.vmx_info['virtualHW']['version']))
         self.cfg_details['vm_type'] = HVM_VMWARE_NAMEMAP[vmtypekey]
+        self.cfg_details['vm_type_str'] = HYPERVISORS[self.cfg_details['vm_type']]
 
         self.__get_primary_disk()
+
         return self.cfg_details
 
     def vm_get_primary_disk(self):

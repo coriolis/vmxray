@@ -1,10 +1,10 @@
 #!python
 
 # Python imports
+from __future__ import with_statement
+
 import os
 import re
-#import rpm
-import sys
 
 from vm_inspector.vm_os_profiler.os_consts import *
 from vm_inspector.vm_os_profiler.profilers.linux import vm_os_linux
@@ -32,61 +32,72 @@ class vm_os_debian(vm_os_linux):
 
     def __init__(self, **args):
         self.fs_mntpt = args['fs_mountpoint']
-        #if not os.path.ismount(self.fs_mntpt):
-            #raise vm_fs_not_mounted_error()
-        #else:
         self.os_details = dict()
         self.installed_apps = []
 
     def __get_installed_apps(self):
+        """ Get the list of installed application from disk image.
         """
-        Get the list of installed application from mounted filesystem.
-        """
-        dpkg_db_dir = os.path.join(self.fs_mntpt, "var/lib/dpkg")
-        cmd = "dpkg-query -W -f=\'${Package},${Status},${Version},\\\n\' --admindir=%s"\
-                % dpkg_db_dir
-        status_pattern = re.compile(r'install\sok\sinstalled')
-        for line in os.popen(cmd).readlines():
-            if status_pattern.findall(line):
-                data = line.split(',')
-                self.installed_apps.append("%s-%s" %(data[0], data[2],))
+        pkg_list = []
+        pkg_entry = dict()
+        buffer = vm_find_path(self.fs_mntpt, os.path.join("var", "lib", 
+                              "dpkg", "status"), returntype="list")
+        
+        for x in buffer:
+            if x == '\n':
+                pkg_list.append(pkg_entry)
+                pkg_entry = dict()
+            else:
+                try:
+                    details = x.split(':')
+                    if details[0] in ('Package', 'Version'):
+                        pkg_entry[details[0]] = ':'.join(details[1:]).strip() 
+                except:
+                    pass
+        
+        self.installed_apps = ["%s-%s" % (x['Package'], x['Version']) \
+                               for x in pkg_list]
+        self.installed_apps.sort()
 
     def __get_installed_kernel_info(self):
-        """ Method to extract kernel information from mounted root fs.
+        """ Method to extract kernel information from disk image.
         """
-        dpkg_db_dir = os.path.join(self.fs_mntpt, "var/lib/dpkg")
-        try:
-            cmd = "dpkg-query -W -f \'${Package}\\\n\' --admindir=%s | grep linux-image" % dpkg_db_dir
-            line = os.popen(cmd).readlines()
-            kernel_pkg_list = [x.strip() for x in line]
-            self.os_details['str_os_kernel_bld'] = ','.join(kernel_pkg_list) 
-        except:
-            self.os_details['str_os_kernel_bld'] = None
+
+        kernel_pkgs = []
+        buffer = vm_find_path(self.fs_mntpt, os.path.join("var", "lib", 
+                              "dpkg", "status"), returntype="list")
+        
+        for x in buffer:
+            if x.startswith('Package:'):
+                details = x.split(':')
+                if details[1].strip().startswith('linux-image'):
+                    kernel_pkgs.append(details[1].strip())
+
+        self.os_details['str_os_kernel_bld'] = ', '.join(kernel_pkgs)
         
     def get_os_details(self):
+        """ Extract the debian machine details.
         """
-        Extract the debian machine details.
-        """
-        fd = vm_find_path(self.fs_mntpt, os.path.join\
-                ("etc", "debian_version"), returntype="list")
-        #fd = open(os.path.join(self.fs_mntpt, 'etc', 'debian_version'), 'r')
-        # remove the newline char
-        self.os_details['distro'] = fd.readline()[:-1]
-        #fd.close()
+        debian_version = vm_find_path(self.fs_mntpt, os.path.join\
+                ("etc", "debian_version"), returntype="data")
+        ubuntu_version = vm_find_path(self.fs_mntpt, os.path.join\
+                ("etc", "lsb-release"), returntype="data")
+        
+        self.os_details['distro'] = debian_version.strip() 
         self.os_details['os_type'] = "Linux"
+        
         try:
-            os_data = vm_find_path(self.fs_mntpt, os.path.join\
-                    ("etc", "lsb-release"), returntype="data")
-            #fd = open(os.path.join(self.fs_mntpt, 'etc', 'lsb-release'), 'r')
-            #os_data = fd.read()
-            #fd.close()
             t = re.search(r"DISTRIB_DESCRIPTION=\"(?P<distrib_name>.*)\"",
-                          os_data)
+                          ubuntu_version)
             self.os_details['os_name'] = t.group('distrib_name')
         except:
             self.os_details['os_name'] = "Debian"
+
         self.__get_installed_apps()
         self.__get_installed_kernel_info()
+        
         self.os_details['Applications/Internet'] = \
                 ', '.join(self.installed_apps)
+        self.os_details['installed_apps_list'] = self.installed_apps
+        
         return self.os_details

@@ -75,6 +75,7 @@ class libvirt_config_parser(vm_config_parser_base):
         vm_type = vm_domain.attributes['type'].value
         # Set value in cfg details.
         self.cfg_details['vm_type'] = HVM_LIBVIRT_NAMEMAP[vm_type]
+        self.cfg_details['vm_type_str'] = vm_type
         self.cfg_details['displayName'] = (
                 xmldoc.getElementsByTagName('name')[0].firstChild.data)
         self.cfg_details['memsize'] = str(
@@ -97,6 +98,7 @@ class libvirt_config_parser(vm_config_parser_base):
                 break
 
         self.cfg_details['primary_disk'] = primary_disk_list
+        self.cfg_details['primary_disk_str'] = ','.join(primary_disk_list)
 
         if not self.cfg_details:
             raise config_file_invalid()

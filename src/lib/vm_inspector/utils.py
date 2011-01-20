@@ -12,6 +12,9 @@ from loadconfig import *
 VERSION = 0.01
 __all__ = ['check_path', 'find_path', ]
 
+
+_IMG_FS_OFFSET_SECTOR = '063'
+
 class PathNotFoundError(Exception):
     """ Exception if path does not exist.
     """
@@ -109,8 +112,35 @@ def vm_find_path(diskfile, path, inode=None, returntype=None):
     else:
         raise Exception("Unable to find %s" %(path))
 
+def set_fs_starting_offset(diskfile):
+    global _IMG_FS_OFFSET_SECTOR
+    fs_list = [ 'Linux (0x83)', 'NTFS (0x07)', ] 
+    cmd = [os.path.join(conf["bin_dir"], "mmls"), '-i', "QEMU", diskfile]
+    res = ''
+    
+    for fs_type in fs_list: 
+        p1 = Popen(cmd, stdout=PIPE)
+        p2 = Popen(['grep', fs_type], stdin=p1.stdout, stdout=PIPE)
+        p3 = Popen(['awk', '{print $3}'], stdin=p2.stdout, stdout=PIPE)
+        try:
+            res = p3.communicate()[0].strip()
+            if res != '':
+                break
+        except:
+            continue
+
+    if res == '':
+        raise Exception("Unable to read partition table.")
+    
+    if _IMG_FS_OFFSET_SECTOR != res:
+        _IMG_FS_OFFSET_SECTOR = res
+
+    
 def fls(diskfile, inode=None):
-    cmd = [os.path.join(conf["bin_dir"], "fls"), '-o', '063', '-i', "QEMU", diskfile]
+    set_fs_starting_offset(diskfile)
+    offset = _IMG_FS_OFFSET_SECTOR
+    cmd = [os.path.join(conf["bin_dir"], "fls"), '-o', offset, '-i', "QEMU", 
+           diskfile]
     if inode:
         cmd.append(inode)
     return Popen(cmd, stdout=PIPE)
@@ -132,14 +162,16 @@ def readfile(disk, inode, returntype=None):
     """
     read a file and return its content
     """
-    cmd = [os.path.join(conf["bin_dir"], "icat"), '-o', '063', '-i', "QEMU", disk, inode]
+    offset = _IMG_FS_OFFSET_SECTOR
+    cmd = [os.path.join(conf["bin_dir"], "icat"), '-o', offset, '-i', "QEMU", 
+           disk, inode]
     p = Popen(cmd, stdout=PIPE)
     if returntype:
         if returntype == "file":
             dirname, filename = os.path.split(disk)
             filename = os.path.abspath(os.path.join(conf["tmp_dir"], filename)) 
             with open(filename, "wb") as fd:
-                for line in p.stdout.readlines():
+                for line in p.stdout.readlines()[4:]:
                     fd.write(line)
             return filename
         elif returntype == "list":
@@ -148,4 +180,4 @@ def readfile(disk, inode, returntype=None):
                filedata.append(line)
            return filedata
         elif returntype == "data":
-           return p.stdout.read(bl)
+           return ''.join(p.stdout.readlines()[4:])
