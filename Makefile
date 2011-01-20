@@ -64,3 +64,7 @@ clean:
 	make -C $(READ_REG_DIR) clean
 	rm -rf ${BUILD_DIR}
 	rm -rf ${TMP_BUILD_DIR}
+	find . -name '*.os' -delete
+	find . -name '*.so'	-delete
+	find . -name '*.pyc' -delete
+	find . -name *.dblite -delete
