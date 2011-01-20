@@ -40,13 +40,13 @@ def print_installed_applications(os_details):
         print "\t%s" % app_list[i].strip()
 
 if __name__ == "__main__":
-    usage = "%s [-h] -d <virtual machine path>" % sys.argv[0] 
+    usage = "%s [-h] [-q] -d <virtual machine path>" % sys.argv[0] 
     parser = OptionParser(usage)
     parser.add_option("-d", "--vm-dir", dest="vm_dir", 
                       help="virtual machine file path")
     parser.add_option("-q", "--quite", dest="hide_app",
                       action="store_true", 
-                      help="Display installed applications.")
+                      help="Hide installed applications list.")
     
     (options, args) = parser.parse_args()
 
