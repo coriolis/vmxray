@@ -4,6 +4,7 @@
 import os
 import re
 from xml.dom import minidom
+from xml.etree.ElementTree import ElementTree as ET
 
 from vm_inspector.hypervisors.consts import *
 from vm_inspector.vm_config_parser import vm_config_parser_base
@@ -61,6 +62,18 @@ class libvirt_config_parser(vm_config_parser_base):
             return True
 
         return False
+    
+    @staticmethod
+    def get_disk_details(disk_xml):
+        try:
+            item_list = []
+            item_list.extend(disk_xml.items())
+            item_list.extend(disk_xml.find('source').items())
+            item_list.extend(disk_xml.find('target').items())
+            result = dict(data for data in item_list)
+            return result
+        except Exception, e:
+            return None
 
     def vm_read_config(self):
         """
@@ -68,33 +81,22 @@ class libvirt_config_parser(vm_config_parser_base):
         cfg_details dictionary. This method returns the dictionary or 
         raise exception if xml is not valid.
         """
-        cfg_file = self.cfg_file
-        # get vm_type from xml file.
-        xmldoc = minidom.parse(cfg_file)
-        vm_domain = xmldoc.getElementsByTagName('domain')[0]
-        vm_type = vm_domain.attributes['type'].value
-        # Set value in cfg details.
+        
+        domain = ET().parse(self.cfg_file)
+        vm_type = domain.get('type') 
         self.cfg_details['vm_type'] = HVM_LIBVIRT_NAMEMAP[vm_type]
         self.cfg_details['vm_type_str'] = vm_type
-        self.cfg_details['displayName'] = (
-                xmldoc.getElementsByTagName('name')[0].firstChild.data)
-        self.cfg_details['memsize'] = str(
-                int(xmldoc.getElementsByTagName(
-                    'memory')[0].firstChild.data) >> 10)
-        # Get primary disk details.
-        disk_list = xmldoc.getElementsByTagName('disk')
+        self.cfg_details['displayName'] = domain.find('name').text
+        self.cfg_details['memsize'] = int(domain.find('memory').text) >> 10
+
         primary_disk_list = []
-        for disk in disk_list:
-            disk_type = disk.attributes['type']
-            device = disk.attributes['device']
-            target = disk.getElementsByTagName('target')[0]
-            target_bus = target.attributes['bus'].value
-            target_dev = target.attributes['dev'].value
-            disk_image = disk.getElementsByTagName('source')[0].attributes.values()[0].value
-            if (disk_type.value == 'file' and device.value == 'disk' and \
-                (target_dev == 'hda' or target_dev == 'sda') and \
-                (target_bus == 'ide' or target_bus == 'scsi')):
-                primary_disk_list.append(os.path.basename(disk_image))
+        for disk in domain.findall('devices/disk'):
+            disk_details = self.get_disk_details(disk)
+            if disk.get('type') == 'file' and \
+               disk.get('device') == 'disk' and \
+               disk_details['dev'] in ('sda', 'hda', 'vda') and \
+               disk_details['bus'] in ('ide', 'scsi', 'virtio'):
+                primary_disk_list.append(os.path.basename(disk_details['file']))
                 break
 
         self.cfg_details['primary_disk'] = primary_disk_list

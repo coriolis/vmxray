@@ -147,7 +147,7 @@ def fls(diskfile, inode=None):
 
 def parse_inode(p, path):
     base, target = os.path.split(path)
-    for a in p.stdout.readlines():
+    for a in p.stdout.readlines()[4:]:
         inode = parse_directory(a, target)        
         if inode:
             return inode
